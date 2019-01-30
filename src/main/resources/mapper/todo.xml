@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kakaoix.todo.app.rest.dao.TodoMapper">
+
+	<resultMap id="todoReferenceMap" type="todoReference" >
+		<result property="refSeq" 		column="refSeq"/>
+		<result property="todoId" 		column="todoId2"/>
+		<result property="insertDate" 	column="insertDate2"/>
+		<result property="whatTodo" 	column="whatTodo2"/>
+		<result property="parentTodoId" column="parentTodoId"/>
+		<result property="status" 		column="status2"/>
+	</resultMap>
+		
+	<resultMap id="todoItemResult"  type="todoItem">
+		<id property="todoId" 			column="todoId" />
+		<result property="whatTodo" 	column="whatTodo"/>
+		<result property="status" 		column="status"/>
+		<result property="updateDate" 	column="updateDate"/>
+		<result property="insertDate" 	column="insertDate"/>
+		<result property="dbsts" 		column="dbsts"/>
+		<result property="refYn" 		column="refYn"/>
+		<collection property="todoReferenceList" ofType="todoReference" resultMap="todoReferenceMap" />
+	</resultMap>
+
+	<select id="selectTodoList" resultMap="todoItemResult" parameterType="pagebean">
+		SELECT 
+			td.todo_id 				as todoId
+			, td.what_todo 			as whatTodo
+			, td.status 			as status
+			, TO_CHAR(td.update_date, 'yyyy-MM-dd')		as updateDate
+			, TO_CHAR(td.insert_date, 'yyyy-MM-dd')		as insertDate
+			, td.dbsts				as dbsts
+			, tf.ref_seq			as refSeq
+			, tf.todo_id			as todoId2
+			, tf.what_todo 			as whatTodo2 			
+			, TO_CHAR(tf.insert_date, 'yyyy-MM-dd')		as insertDate2
+			, tf.parent_todo_id 	as parentTodoId
+			, tf.status 			as status2
+		FROM (
+			SELECT 
+				tx.todo_id
+				, tx.what_todo
+				, tx.status
+				, tx.update_date
+				, tx.insert_date
+				, tx.dbsts
+			FROM k_todo_list tx
+			WHERE tx.dbsts = 'N'
+			ORDER BY tx.todo_id desc
+			LIMIT #{startRow}, #{endRow} 
+		) as td LEFT JOIN (
+							SELECT  
+							      trf.ref_seq
+					              , trf.todo_id	
+					              , trf.insert_date
+					              , trf.parent_todo_id
+					              , ktl.what_todo
+					              , ktl.status 			
+							FROM k_todo_ref_list trf join k_todo_list ktl on (trf.parent_todo_id = ktl.todo_id)
+						  ) as tf on (td.todo_id = tf.todo_id)
+	</select>
+	
+	<select id="selectTodoListCount" resultType="Integer" parameterType="pagebean">
+		SELECT 
+			count(*) as cnt
+		FROM k_todo_list as td
+		WHERE td.dbsts = 'N'
+		<if test='whatTodo != "" and whatTodo != null'>
+		 	AND	 td.what_todo = #{whatTodo}
+		</if>
+	</select>
+	
+	<select id="selectProceedingReferenceListCount" resultType="Integer" parameterType="pagebean">
+		SELECT 
+			COUNT(*) AS CNT
+		FROM k_todo_list
+		WHERE 
+			dbsts = 'N'
+			AND status = 'I'
+			AND todo_id in (
+					SELECT 
+						tr.parent_todo_id
+					FROM k_todo_ref_list as tr
+					WHERE tr.todo_id = #{todoId}
+			)
+	</select>
+	
+	<select id="selectTodoListForChcekBox" resultMap="todoItemResult" parameterType="pagebean">
+		SELECT 
+			td.todo_id 				as todoId
+			, td.what_todo 			as whatTodo
+			, td.status 			as status
+			, TO_CHAR(td.update_date, 'yyyy-MM-dd')		as updateDate
+			, TO_CHAR(td.insert_date, 'yyyy-MM-dd')		as insertDate
+			, td.dbsts				as dbsts
+			, (CASE WHEN k2.todo_id IS NULL THEN  'N' ELSE 'Y' END) AS refYn
+		FROM K_TODO_LIST as td left join (
+											  SELECT kt2.TODO_ID  FROM K_TODO_LIST kt2 where TODO_ID  in
+											  (
+											      select parent_todo_id
+											      from  K_TODO_REF_LIST  
+											      where todo_id = #{todoId}
+											   )
+		) as k2 on(td.TODO_ID  =  k2.TODO_ID)
+		WHERE td.todo_id != #{todoId}
+	</select>
+	
+	<insert id="insertTodoItem">
+		INSERT INTO K_TODO_LIST
+		(
+			what_todo
+			, status
+			, insert_date
+			, dbsts
+		) VALUES
+		(  
+			#{whatTodo} 
+			, 'I'
+			, CURRENT_TIMESTAMP()
+			, 'N' 
+		)
+	</insert>
+	
+	<insert id="insertReferenceList" parameterType="todoitem">
+		INSERT INTO K_TODO_REF_LIST
+		(
+			todo_id
+			, parent_todo_id
+			, insert_date
+		) VALUES
+		<foreach collection="parentTodoId" item="item" index="index" separator="," >
+		   	( 
+				#{todoId, jdbcType=VARCHAR}
+				, #{item, jdbcType=VARCHAR}
+				, CURRENT_TIMESTAMP() 
+			)
+		</foreach>	
+	</insert>
+	
+	<update id="updateTodoItem">
+		UPDATE K_TODO_LIST
+		  SET   
+		   		update_date = CURRENT_TIMESTAMP() 	
+				<if test='whatTodo != "" and whatTodo != null'> , what_todo = #{whatTodo}	</if>
+				<if test='status != "" and status != null'>		, status = #{status}		</if>
+				<if test='dbsts != "" and dbsts != null'>		, dbsts = #{dbsts}			</if>
+		  WHERE todo_id = #{todoId}
+	</update>	
+	
+	<delete id="deleteReferenceListByTodoId">
+		DELETE FROM 
+			K_TODO_REF_LIST
+		WHERE 
+			todo_id = #{todoId}
+	</delete>
+	 
+	<delete id="deleteReferenceListByParentTodoId">
+		DELETE FROM 
+			K_TODO_REF_LIST
+		WHERE 
+			parent_todo_id = #{parentTodoId}
+	</delete>
+		
+	<select id="selectReferenceMeCount" resultType="Integer" parameterType="todoitem">
+		SELECT 
+			COUNT(*) 
+		FROM K_TODO_LIST TD
+		WHERE 
+			TD.STATUS = 'I'
+			AND TD.TODO_ID IN(
+					SELECT 
+						TODO_ID 
+					FROM K_TODO_REF_LIST AS  TRF 
+					WHERE PARENT_TODO_ID = #{todoId}
+					AND TODO_ID IN
+					<foreach collection="parentTodoId" item="item" open="(" close=")" separator=",">
+						#{item, jdbcType=VARCHAR}
+					</foreach>
+					)
+	</select>	
+	
+</mapper>
