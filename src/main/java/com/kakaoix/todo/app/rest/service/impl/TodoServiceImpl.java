@@ -21,7 +21,7 @@ import com.kakaoix.todo.app.rest.service.TodoService;
 
 @Service
 public class TodoServiceImpl implements TodoService {
-	
+
 	private static final Log logger = LogFactory.getLog(TodoServiceImpl.class);
 
 	@Autowired
@@ -29,8 +29,6 @@ public class TodoServiceImpl implements TodoService {
 
 	@Override
 	public List<Todo> selectTodoList(int pageNo) {
-		logger.warn("selectTodoList !!!!pageNo : "+pageNo);
-		
 		return todoMapper.selectTodoList(new PageBean(pageNo));
 	}
 	
@@ -47,31 +45,29 @@ public class TodoServiceImpl implements TodoService {
 	@Override
 	@Transactional
 	public int addTodoItem(Todo todoItem){
-		
 		// Duplicate Checking by whatTodo
 		int countList = todoMapper.selectTodoListCount( new PageBean( 0, 0, todoItem.getWhatTodo() ) );
 		
-		if(countList > 0)
+		if(countList > 0){
 			throw new TodoException("이미 등록된 Todo명 입니다. ", "0909");
-		
+		}
+
 		List<TodoReference> todoReferenceList = todoItem.getTodoReferenceList();
 		
 		// 등록할 todoReferenceList 가 존재 한다면 등록
-		if(todoReferenceList != null && todoReferenceList.size() > 0)
+		if(todoReferenceList != null && todoReferenceList.size() > 0) {
 			todoMapper.insertReferenceList(todoItem.getTodoReferenceList());
-		
-		return todoMapper.insertTodoItem(todoItem);
+		}
 
+		return todoMapper.insertTodoItem(todoItem);
 	}
 	
 	@Override
 	@Transactional
 	public int modTodoItem(Todo todoItem){
-		
 		int todoId = todoItem.getTodoId();
 		String status = todoItem.getStatus();
 		String whatTodo = todoItem.getWhatTodo();
-		
 
 		logger.warn("#1 할일 명 중복 체크 ");
 		
@@ -125,7 +121,6 @@ public class TodoServiceImpl implements TodoService {
 	@Override
 	@Transactional
 	public int modStatus(Todo todoItem){
-		
 		int todoId = todoItem.getTodoId();
 		String status = todoItem.getStatus();
 		
@@ -138,26 +133,27 @@ public class TodoServiceImpl implements TodoService {
 				throw new TodoException("참조하는 Todo 중 완료가 안된 Todo가 존재한다면, 완료 처리를 할 수 없어요.", "5000");
 			}
 		}
-		
+
 		return todoMapper.updateTodoItem(todoItem);
-	
+
 	}
-	
 	
 	@Override
 	@Transactional
 	public int removeTodoItem(int todoId) throws TodoException{
-		// 내가 참조하는 todo 삭제
-		todoMapper.deleteReferenceListByTodoId(todoId);
-		
-		// 나를 참조하는 todo 삭제
-		todoMapper.deleteReferenceListByParentTodoId(todoId);
-		
+		// #1. 내가 참조하는 todo 삭제
+		int delRefCount = todoMapper.deleteReferenceListByTodoId(todoId);
+		logger.warn("delRefCount : "+delRefCount);
+
+		// #2. 나를 참조하는 todo 삭제
+		int delParentCount = todoMapper.deleteReferenceListByParentTodoId(todoId);
+		logger.warn("delParentCount : "+delParentCount);
+
 		Map<String, Object> dtoMap = new HashMap<>();
 		dtoMap.put("todoId", todoId);
 		dtoMap.put("dbsts", Status.Deleted.getValue());
-		
-		// todoItem 삭제
+
+		// #3. todoItem 삭제
 		return todoMapper.updateTodoItem(dtoMap);
 	}
 	

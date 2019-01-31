@@ -11,12 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.kakaoix.todo.app.rest.domain.Todo;
 import com.kakaoix.todo.app.rest.exception.TodoException;
@@ -59,7 +54,7 @@ public class RestApiController {
 			// retrieve list
 			List<Todo> todoList = todoService.selectTodoList(pageNo);
 			
-			// Row total count 는 헤더로 전달
+			// Row total count 는 헤더로 전달 할까?
 			HttpHeaders headers = new HttpHeaders();
 		    headers.add("Content-Type", "application/json; charset=UTF-8");
 		    headers.add("X-list-total-count", listTotalCount.toString());
@@ -158,16 +153,23 @@ public class RestApiController {
 			}
 			
 			Map<String, Object> resultMap = new HashMap<>();
-			resultMap.put("code", "0000");
-			resultMap.put("message", "정상적으로 수정 되었습니다.");
-			
-			return new ResponseEntity<>(resultMap, HttpStatus.ACCEPTED);
+            resultMap.put("code", "0000");
+            resultMap.put("message", "정상적으로 수정 되었습니다.");
+
+            return new ResponseEntity<>(resultMap, HttpStatus.ACCEPTED);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}
 	}
-	
+
+    /**
+     * Todo 상태값 변경하기
+     * @param todoItem
+     * @param bindingResult
+     * @return
+     */
 	@PutMapping("/api/todos/status")
 	public ResponseEntity<?> setStatus(Todo todoItem, BindingResult bindingResult) {
 		try {
@@ -181,12 +183,12 @@ public class RestApiController {
 			
 			if(result < 0) {
 				// 업데이트 건수가 존재하지 않습니다.
-				throw new TodoException("없데이트된 데이트가 없습니다.", "4001");
+				throw new TodoException("없데이트된 데이터가 없습니다.", "4001");
 			}
 			
 			Map<String, Object> resultMap = new HashMap<>();
 			resultMap.put("code", "0000");
-			resultMap.put("message", "[status]정상적으로 수정 되었습니다.");
+			resultMap.put("message", "상태값이 정상적으로 수정 되었습니다.");
 			
 			return new ResponseEntity<>(resultMap, HttpStatus.ACCEPTED);
 			
@@ -201,22 +203,25 @@ public class RestApiController {
 	 * @param todoId
 	 * @return
 	 */
-	@Delete("/api/todos/{todoId}")
+	@DeleteMapping("/api/todos/{todoId}")
 	public ResponseEntity<?> deleteTodoItem(@PathVariable("todoId") int todoId) {
 		try {
-			
 			int result = todoService.removeTodoItem(todoId);
 			
 			if(result < 0) {
-				return new ResponseEntity<>("", HttpStatus.BAD_REQUEST);
+                throw new TodoException("삭제된 데이터가 없습니다.", "4001");
 			}
-			
+
+            logger.warn("result --> " + result);
+
 			Map<String, Object> resultMap = new HashMap<>();
 			resultMap.put("code", "0000");
 			resultMap.put("message", "정상적으로 삭제 되었습니다.");
-			
-			return new ResponseEntity<>("", HttpStatus.NO_CONTENT);
-			
+
+            logger.warn("resultMap --> " + resultMap);
+
+            return new ResponseEntity<>(resultMap, HttpStatus.ACCEPTED);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

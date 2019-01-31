@@ -23,7 +23,7 @@
 	</resultMap>
 
 	<select id="selectTodoList" resultMap="todoItemResult" parameterType="pagebean">
-		SELECT 
+		SELECT
 			td.todo_id 				as todoId
 			, td.what_todo 			as whatTodo
 			, td.status 			as status
@@ -32,12 +32,12 @@
 			, td.dbsts				as dbsts
 			, tf.ref_seq			as refSeq
 			, tf.todo_id			as todoId2
-			, tf.what_todo 			as whatTodo2 			
+			, tf.what_todo 			as whatTodo2
 			, TO_CHAR(tf.insert_date, 'yyyy-MM-dd')		as insertDate2
 			, tf.parent_todo_id 	as parentTodoId
 			, tf.status 			as status2
 		FROM (
-			SELECT 
+			SELECT
 				tx.todo_id
 				, tx.what_todo
 				, tx.status
@@ -47,15 +47,15 @@
 			FROM k_todo_list tx
 			WHERE tx.dbsts = 'N'
 			ORDER BY tx.todo_id desc
-			LIMIT #{startRow}, #{endRow} 
+			LIMIT #{startRow}, #{endRow}
 		) as td LEFT JOIN (
-							SELECT  
+							SELECT
 							      trf.ref_seq
-					              , trf.todo_id	
+					              , trf.todo_id
 					              , trf.insert_date
 					              , trf.parent_todo_id
 					              , ktl.what_todo
-					              , ktl.status 			
+					              , ktl.status
 							FROM k_todo_ref_list trf join k_todo_list ktl on (trf.parent_todo_id = ktl.todo_id)
 						  ) as tf on (td.todo_id = tf.todo_id)
 	</select>

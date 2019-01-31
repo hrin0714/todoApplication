@@ -9,9 +9,18 @@
 <link rel="stylesheet"	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
 <script	src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-<title>Hello, world!</title>
+<title>TodoApp</title>
+<style>
+ul {
+	width: 300px;
+	margin-left: auto;
+	margin-right: auto;
+}
+</style>
 
 <script>
+
+
 $(document).ready(function(){
   $('[data-toggle="tooltip"]').tooltip();   
 });
@@ -57,9 +66,7 @@ $(function(){
 	goPage(1);
 });
 
-
 // ## 리스트 조회
-
 // Todo Base API URL
 var todoBaseUrl = '/api/todos';
 
@@ -143,10 +150,8 @@ function renderTableBody(json){
 	    	var c_refSeq = todoReferenceItem.refSeq;
 	    	var c_status = todoReferenceItem.status;
 	    	
-	    	
 	    	bodyHtml += "<a href='#' data-toggle='tooltip' data-placement='top' title='"+c_whatTodo+"("+(c_status == 'I' ? "진행중": "완료됨")+")'>@"+c_parentTodoId+"</a>";
-	    	
-	    	
+
 	    	if(j < todoReferenceList.length-1) bodyHtml += ",&nbsp;";
 	    }	 	
 	    bodyHtml += "</td>";
@@ -160,7 +165,10 @@ function renderTableBody(json){
 	    bodyHtml += "<option value='C'"+(status == 'C' ? " selected": "")+">완  료</option>";
 	    bodyHtml += "</select>";
 		bodyHtml += "</td>";
-	    bodyHtml += "</tr>";
+
+		bodyHtml += "<td><button type='button' todoId='"+ todoId +"' class='delBtn btn btn-danger btn-sm' id='delBtn' >삭제</button></td>";
+
+		bodyHtml += "</tr>";
 	}
 	
 	// Set Table Body render
@@ -192,6 +200,12 @@ function renderTableBody(json){
 		
 		$("#myModal").modal();
 	});
+
+
+	$('.delBtn').click(function(){
+		var _todoId 	 = $(this).attr('todoId');
+		removeTodo(_todoId);
+	});
 	
 	$('[data-toggle="tooltip"]').tooltip();   
 }
@@ -206,6 +220,48 @@ function modTodoStatus(obj, todoId, whatTodo){
 	modTodo('/status');
 }
 
+// Remove TodoItem
+function removeTodo(todoId){
+	var reqUrl = todoBaseUrl + "/" + todoId;
+	var frm = $('#pageForm');
+
+	if (confirm('삭제 하시겠습니까?')) {
+		$.ajax({
+
+
+		/*	url      : reqUrl,
+			type     : 'put',
+			data	 :	frm.serializeArray(),
+			dataType : 'json',
+			cache    : false,
+			success  : function( json, status, request ) {
+				var _json = JSON.stringify(json);
+				var jsonData = JSON.parse(_json);
+				var message = jsonData.message;
+			*/
+
+			url: reqUrl,
+			type: 'delete',
+			data: frm.serializeArray(),
+			dataType: 'json',
+			cache: false,
+			success  : function( json, status, request ) {
+				var _json = JSON.stringify(json);
+				var jsonData = JSON.parse(_json);
+				var message = jsonData.message;
+
+				// msg alert
+				alert(message);
+
+				// move to first Page.
+				goPage(1);
+			},
+			error: function (request, status, error) {
+				alertMsgByJson(request);
+			}
+		});
+	}
+}
 
 //## SelectRefrenceTodoList for Checkbox
 // 참조하고 있는 Todo 목록 조회 (체크박스 만들기 용) 
@@ -272,12 +328,14 @@ function addTodo(){
 	var frm = $('#addForm');	
 	var reqUrl = todoBaseUrl;
 	
-	var whatTodo = $('#addForm #whatTodo').val()
+	var whatTodo = $('#addForm #whatTodo').val();
 	if(whatTodo == '' || whatTodo == null){
 		
 		// test src+ 
-		//alert(whatTodo+"필수 항목 누락");
-		//return;
+		alert(whatTodo+"할일을 입력하세요.");
+
+		$('#addForm #whatTodo').focus();
+		return;
 		
 	}
 	//alert("todoListUrl :"+todoListUrl);
@@ -372,15 +430,22 @@ function rederPagination() {
 	
 	var tag = new StringBuffer();
 	
-	//  이전  1 2 3  다음
+	//  처음 이전  1 2 3  다음 마지막
 	
-	var totolPage = Math.floor(totalCount % perPage) == 0 ? Math.floor(totalCount / perPage) : (Math.floor(totalCount / perPage) + 1);
-	var currentGroupNo = Math.floor(pageNo % pageHorizonalSize) == 0 ? (Math.floor(pageNo / pageHorizonalSize) - 1) :  Math.floor(pageNo / pageHorizonalSize);
-	var currentGroupStartPageNo = (currentGroupNo * pageHorizonalSize) + 1;
-	var currentGroupEndPageNo = (currentGroupStartPageNo + pageHorizonalSize);
-	
+	var totolPage = Math.floor( totalCount % perPage ) == 0 ? Math.floor( totalCount / perPage ) : ( Math.floor( totalCount / perPage ) + 1 );
+	var currentGroupNo = Math.floor( pageNo % pageHorizonalSize) == 0 ? ( Math.floor( pageNo / pageHorizonalSize ) - 1 ) :  Math.floor( pageNo / pageHorizonalSize );
+	var currentGroupStartPageNo = ( currentGroupNo * pageHorizonalSize ) + 1;
+	var currentGroupEndPageNo = ( currentGroupStartPageNo + pageHorizonalSize );
+
+	var lastGroupNo =   totolPage < pageHorizonalSize ? 0 :( ( totolPage % pageHorizonalSize ) == 0 ?  ( Math.floor( totolPage / pageHorizonalSize ) - 1 ) : Math.floor(totolPage / pageHorizonalSize) );
+
 	var tag = new StringBuffer();
-	//
+
+	// first * previous
+	if( currentGroupNo > 0 && currentGroupNo <= lastGroupNo ) tag.append('<li><a href=\"javascript:goPage(1);\">처음&nbsp;</a></li>');
+	if( currentGroupNo > 0 ) tag.append('<li><a href=\"javascript:goPage('+ (currentGroupStartPageNo - 1) +');\">이전&nbsp;</a></li>');
+
+	// Paging
 	for(var i = currentGroupStartPageNo; i < currentGroupEndPageNo ; i++) {
 		var pno = i;
 		
@@ -388,7 +453,12 @@ function rederPagination() {
 		
 		if(pno == totolPage) break;
 	}
-	
+
+	// next & End
+	if( currentGroupNo < lastGroupNo ) {
+		tag.append('<li><a href=\"javascript:goPage(' + currentGroupEndPageNo + ');\">다음&nbsp;</a></li>');
+		tag.append('<li><a href=\"javascript:goPage(' + totolPage + ');\">마지막&nbsp;</a></li>');
+	}
 	$('.pagination').html(tag.toString());
 }
 
@@ -413,7 +483,7 @@ StringBuffer.prototype.toString = function() {
 			<input type="hidden" id="pageNo" value="" />
 			<input type="hidden" id="totalCount" value="" />
 			<input type="hidden" id="perPage" value="5" />
-			<input type="hidden" id="pageHorizonalSize" value="10" />
+			<input type="hidden" id="pageHorizonalSize" value="3" />
 		</form>
 		 		
 		<div class="jumbotron">
@@ -478,10 +548,10 @@ StringBuffer.prototype.toString = function() {
 					<th>작성일</th>
 					<th>최종수정일</th>
 					<th>상태</th>
+					<th>삭제</th>
 				</tr>
 			</thead>
-			<tbody id='tBody'>
-			</tbody>
+			<tbody id='tBody'></tbody>
 		</table>
 		
 		<!-- Pagination -->
