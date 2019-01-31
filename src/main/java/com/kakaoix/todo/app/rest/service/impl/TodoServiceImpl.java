@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.kakaoix.todo.app.rest.domain.PageBean;
-import com.kakaoix.todo.app.rest.dao.TodoMapper;
+import com.kakaoix.todo.app.rest.mapper.TodoMapper;
 import com.kakaoix.todo.app.rest.domain.Status;
 import com.kakaoix.todo.app.rest.domain.Todo;
 import com.kakaoix.todo.app.rest.domain.TodoReference;

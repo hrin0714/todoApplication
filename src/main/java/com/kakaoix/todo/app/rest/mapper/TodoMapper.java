@@ -1,4 +1,4 @@
-package com.kakaoix.todo.app.rest.dao;
+package com.kakaoix.todo.app.rest.mapper;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +17,7 @@ public interface TodoMapper {
 	/**
 	 * 
 	 * 개요: Todo List 조회
-	 * @Method Name : selectTodoList
+	 * @Method   selectTodoList
 	 * @history
 	 * ---------------------------------------------------------------------------------
 	 *  변경일                    작성자                    변경내용
