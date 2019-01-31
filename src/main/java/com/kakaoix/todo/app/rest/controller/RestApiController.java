@@ -24,7 +24,7 @@ public class RestApiController {
 
 	@ExceptionHandler
 	public ResponseEntity<?> exceptionHndler(TodoException e){
-		// 에러 메세지 처리
+		// 에러 메세지 중앙처리 - 가능하지만..
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("code", e.getCode());
 		resultMap.put("message", e.getMessage());
@@ -49,25 +49,19 @@ public class RestApiController {
 			// get Total count
 			Integer listTotalCount = todoService.selectTodoListCount();
 			
-			logger.warn("listTotalCount : "+listTotalCount.toString());
-			
 			// retrieve list
 			List<Todo> todoList = todoService.selectTodoList(pageNo);
 			
-			// Row total count 는 헤더로 전달 할까?
-			HttpHeaders headers = new HttpHeaders();
-		    headers.add("Content-Type", "application/json; charset=UTF-8");
-		    headers.add("X-list-total-count", listTotalCount.toString());
-	
-		    logger.warn("headers : " + headers);
-			
+			// 헤더?
+			//HttpHeaders headers = new HttpHeaders();
+		    //headers.add("Content-Type", "application/json; charset=UTF-8");
+		    //headers.add("X-list-total-count", listTotalCount.toString());
+
 		    Map<String, Object> resultMap = new HashMap<>();
 		    resultMap.put("totalCount", listTotalCount);
 		    resultMap.put("currentListSize", todoList.size());
 		    resultMap.put("lists", todoList);
-		    
-		    logger.warn("resultMap : " + resultMap);
-					    
+
 		    return new ResponseEntity<>(resultMap, HttpStatus.OK);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -84,21 +78,20 @@ public class RestApiController {
 	public ResponseEntity<?> findReferenceListById(@PathVariable("todoId") int todoId) {
 		try {
 			List<Todo> todoList = todoService.findReferenceListById(todoId);
-			
+
 			Map<String, Object> resultMap = new HashMap<>();
 			resultMap.put("code", "0000");
 			resultMap.put("message", "정상입니다.");
 			resultMap.put("currentListSize", todoList.size());
 		    resultMap.put("lists", todoList);
 		    
-		    logger.warn("resultMap : " + resultMap);
-			
 			return new ResponseEntity<>(resultMap, HttpStatus.OK);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}
 	}
+
 	/**
 	 * Todo 등록하기
 	 * @param todoItem
@@ -108,10 +101,9 @@ public class RestApiController {
 	@PostMapping("/api/todos")
 	public ResponseEntity<?> addTodoItem(Todo todoItem, BindingResult bindingResult) {
 		try {
-			if(bindingResult.hasErrors()) {
-				logger.warn("bindingResult hasErrors: " + bindingResult);
-				return  new ResponseEntity<>("required", HttpStatus.BAD_REQUEST);
-			}
+            if(bindingResult.hasErrors()) {
+                new TodoException(bindingResult.getAllErrors().stream().toString(), "4001");
+            }
 			
 			int result = todoService.addTodoItem(todoItem);
 			
@@ -140,16 +132,14 @@ public class RestApiController {
 	public ResponseEntity<?> modTodoItem(Todo todoItem, BindingResult bindingResult) {
 		try {
 			if(bindingResult.hasErrors()) {
-				return  new ResponseEntity<>("required", HttpStatus.BAD_REQUEST);
+				new TodoException(bindingResult.getAllErrors().stream().toString(), "4001");
 			}
-			
-			logger.warn("todoItem --> " + todoItem);
 			
 			int result = todoService.modTodoItem(todoItem);
 			
 			if(result < 0) {
 				// 업데이트 건수가 존재하지 않습니다.
-				throw new TodoException("없데이트된 데이트가 없습니다.", "4001");
+				throw new TodoException("업데이트된 데이터가 없습니다.", "4001");
 			}
 			
 			Map<String, Object> resultMap = new HashMap<>();
@@ -157,11 +147,10 @@ public class RestApiController {
             resultMap.put("message", "정상적으로 수정 되었습니다.");
 
             return new ResponseEntity<>(resultMap, HttpStatus.ACCEPTED);
-
 		} catch (Exception e) {
-			e.printStackTrace();
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-		}
+            e.printStackTrace();
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
 	}
 
     /**
@@ -191,7 +180,6 @@ public class RestApiController {
 			resultMap.put("message", "상태값이 정상적으로 수정 되었습니다.");
 			
 			return new ResponseEntity<>(resultMap, HttpStatus.ACCEPTED);
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -212,16 +200,11 @@ public class RestApiController {
                 throw new TodoException("삭제된 데이터가 없습니다.", "4001");
 			}
 
-            logger.warn("result --> " + result);
-
 			Map<String, Object> resultMap = new HashMap<>();
 			resultMap.put("code", "0000");
 			resultMap.put("message", "정상적으로 삭제 되었습니다.");
 
-            logger.warn("resultMap --> " + resultMap);
-
             return new ResponseEntity<>(resultMap, HttpStatus.ACCEPTED);
-
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

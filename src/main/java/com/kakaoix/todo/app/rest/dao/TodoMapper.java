@@ -8,8 +8,10 @@ import org.apache.ibatis.annotations.Mapper;
 import com.kakaoix.todo.app.rest.domain.PageBean;
 import com.kakaoix.todo.app.rest.domain.Todo;
 import com.kakaoix.todo.app.rest.domain.TodoReference;
+import org.springframework.stereotype.Repository;
 
 @Mapper
+@Repository
 public interface TodoMapper {
 	
 	/**
@@ -97,7 +99,7 @@ public interface TodoMapper {
 	 * ---------------------------------------------------------------------------------
 	 *  2019. 1. 29.  austin      최초 작성   
 	 * ---------------------------------------------------------------------------------
-	 * @param Todo
+	 * @param todoItem
 	 * @return
 	 */
 	int updateTodoItem(Todo todoItem);
@@ -181,6 +183,7 @@ public interface TodoMapper {
 	 * @param todoId
 	 * @return
 	 */
+	@Deprecated
 	int deleteTodoItem(int todoId);
 	
 	/**

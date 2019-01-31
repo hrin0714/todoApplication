@@ -36,7 +36,7 @@ public class TodoServiceImpl implements TodoService {
 	public Integer selectTodoListCount() {
 		return todoMapper.selectTodoListCount(null);
 	}
-	 
+
 	@Override
 	public List<Todo> findReferenceListById(int todoId) {
 		return todoMapper.selectTodoListForChcekBox(todoId);
@@ -45,7 +45,7 @@ public class TodoServiceImpl implements TodoService {
 	@Override
 	@Transactional
 	public int addTodoItem(Todo todoItem){
-		// Duplicate Checking by whatTodo
+		// Todo명 중복 체크
 		int countList = todoMapper.selectTodoListCount( new PageBean( 0, 0, todoItem.getWhatTodo() ) );
 		
 		if(countList > 0){
@@ -58,7 +58,6 @@ public class TodoServiceImpl implements TodoService {
 		if(todoReferenceList != null && todoReferenceList.size() > 0) {
 			todoMapper.insertReferenceList(todoItem.getTodoReferenceList());
 		}
-
 		return todoMapper.insertTodoItem(todoItem);
 	}
 	
@@ -102,20 +101,18 @@ public class TodoServiceImpl implements TodoService {
 				throw new TodoException("서로 진행중인 Todo는 추가 할 수 없어요.(교차 참조금지 위배)", "5001");
 			}
 		}
+
 		logger.warn("#4. 참조 목록 등록 ");
-		
 		// 4. 참조 목록 등록  (삭제 후 등록)
 		// #1. 기존등록된 데이터 삭제
-		logger.warn("DELETE COUNT --->  "+todoMapper.deleteReferenceListByTodoId(todoItem.getTodoId()));
-	
+		todoMapper.deleteReferenceListByTodoId(todoItem.getTodoId());
+
 		// #2. 신규등록될 참조 TodoId 등록
-		if(todoItem.getParentTodoId() != null && todoItem.getParentTodoId().size() > 0) {	
-			logger.warn("INSERT COUNT --->  "+todoMapper.insertReferenceList(todoItem));
+		if(todoItem.getParentTodoId() != null && todoItem.getParentTodoId().size() > 0) {
+			todoMapper.insertReferenceList(todoItem);
 		}
-		
-		// 5. update todo_list table 
+		// 5. update todo_list table
 		return todoMapper.updateTodoItem(todoItem);
-		
 	}
 	
 	@Override
@@ -124,8 +121,7 @@ public class TodoServiceImpl implements TodoService {
 		int todoId = todoItem.getTodoId();
 		String status = todoItem.getStatus();
 		
-		// 완료 처리 시 체크해야 할 항목
-		// 내가 참조하고 있는 ID 중 진행 중인 Todo가 존재 하는지 체크 필요
+		// '진행' -> '완료' 참조하고 있는 ID 중 진행 중인 Todo가 존재 하는지 체크
 		if(Status.Completed.getValue().equals(status)) {
 			int proceedingTodoCount = todoMapper.selectProceedingReferenceListCount(todoId);
 			
@@ -133,9 +129,7 @@ public class TodoServiceImpl implements TodoService {
 				throw new TodoException("참조하는 Todo 중 완료가 안된 Todo가 존재한다면, 완료 처리를 할 수 없어요.", "5000");
 			}
 		}
-
 		return todoMapper.updateTodoItem(todoItem);
-
 	}
 	
 	@Override
@@ -143,11 +137,9 @@ public class TodoServiceImpl implements TodoService {
 	public int removeTodoItem(int todoId) throws TodoException{
 		// #1. 내가 참조하는 todo 삭제
 		int delRefCount = todoMapper.deleteReferenceListByTodoId(todoId);
-		logger.warn("delRefCount : "+delRefCount);
 
 		// #2. 나를 참조하는 todo 삭제
 		int delParentCount = todoMapper.deleteReferenceListByParentTodoId(todoId);
-		logger.warn("delParentCount : "+delParentCount);
 
 		Map<String, Object> dtoMap = new HashMap<>();
 		dtoMap.put("todoId", todoId);
@@ -156,5 +148,4 @@ public class TodoServiceImpl implements TodoService {
 		// #3. todoItem 삭제
 		return todoMapper.updateTodoItem(dtoMap);
 	}
-	
 }

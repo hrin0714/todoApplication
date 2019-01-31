@@ -21,17 +21,13 @@ public class PageBean {
 	private int todoId;
 	private String whatTodo;
 	
-	public PageBean() {
-
-	}
-	
 	public PageBean(int pageNo) {
 		this.pageNo = pageNo;
 		this.startRow = (((pageNo - 1) * PER_PAGE));
 		this.endRow = PER_PAGE;
 		
 		//default
-		this.todoId = 0;
+		//this.todoId = 0;
 		
 		logger.warn(this.toString());
 	}
@@ -54,9 +50,7 @@ public class PageBean {
 		
 		logger.warn(this.toString());
 	}
-	
-	
-		
+
 	public int getPageNo() {
 		return pageNo;
 	}
@@ -101,4 +95,5 @@ public class PageBean {
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
 	}
+
 }

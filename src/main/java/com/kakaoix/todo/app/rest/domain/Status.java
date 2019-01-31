@@ -1,8 +1,5 @@
 package com.kakaoix.todo.app.rest.domain;
 
-/**
- *
- */
 public enum Status {
 	
 	Ing("I"),
@@ -12,7 +9,7 @@ public enum Status {
 	
 	private String value;
 
-	private Status(String v) {
+	Status(String v) {
 		this.value = v;
 	}
 	
