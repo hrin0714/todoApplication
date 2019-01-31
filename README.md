@@ -6,8 +6,21 @@
  
 
  ### 준비
-  * IntelliJ-ultimate, Git - Check out
+  * IntelliJ-ultimate, Git latest version 
 
+
+
+ ### 실행방법
+  * IntelliJ-ultimate 실행 > VCS > Check out from VersionControl > Git 실행
+  * URL : https://github.com/hrin0714/todoApplication
+  * Directory : 프로젝트가 저장될 디렉토리 설정
+  * Clone 클릭 (본인의 gitHub 계정으로 로그인이 필요함)
+  * Clone 중 pom.xml 실행여부 시 진행(proceed)함
+  * Clone 이 완료되면 pom.xml에 명시된 라이브러리가 다운로드가 진행됩니다.
+  * Run > Run'Application' 
+    * Console에  Spring boot 실행 화면이 나오면 성공.
+    * 본인의 브라우져에서 http://localhost:8080 이동합니다.
+  
 
 
  ### 사용 설명
