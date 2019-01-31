@@ -24,8 +24,12 @@ public class TodoServiceImpl implements TodoService {
 
 	private static final Log logger = LogFactory.getLog(TodoServiceImpl.class);
 
+	private final TodoMapper todoMapper;
+
 	@Autowired
-	TodoMapper todoMapper;
+	public TodoServiceImpl(TodoMapper todoMapper) {
+		this.todoMapper = todoMapper;
+	}
 
 	@Override
 	public List<Todo> selectTodoList(int pageNo) {

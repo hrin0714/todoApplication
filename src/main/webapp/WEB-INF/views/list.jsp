@@ -11,11 +11,24 @@
 <script	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 <title>TodoApp</title>
 <style>
-ul {
-	width: 300px;
-	margin-left: auto;
-	margin-right: auto;
-}
+	.outer {
+		display: table;
+		width: 100%;
+		height: 100%;
+	}
+	.inner {
+		display: table-cell;
+		vertical-align: middle;
+		text-align: center;
+	}
+	.centered {
+		position: relative;
+		display: inline-block;
+
+		width: 70%;
+		padding: 1em;
+		color: white;
+	}
 </style>
 
 <script>
@@ -119,10 +132,14 @@ ul {
 
 			bodyHtml += "<tr>";
 			bodyHtml += "<td data-id='"+todoId+"'>"+todoId+"</td>";
-			bodyHtml += "<td class='tdRow' todoId='"+todoId+"' whatTodo='"+whatTodo+"' status='"+status+"'>"+whatTodo+"("+status+")";
+
+			if(status == COMPLETED)
+				bodyHtml += "<td class='tdRow' todoId='"+todoId+"' whatTodo='"+whatTodo+"' status='"+status+"'><strike>"+whatTodo+"</strike>";
+			else
+				bodyHtml += "<td class='tdRow' todoId='"+todoId+"' whatTodo='"+whatTodo+"' status='"+status+"'>"+whatTodo;
 			// 참조하고 있는 Todo Render
 			for (var j = 0; j < todoReferenceList.length; j++) {
-				if(j == 0) bodyHtml += "<br>";
+				if(j == 0) bodyHtml += "<p/>";
 				var todoReferenceItem = todoReferenceList[j];
 
 				var c_parentTodoId = todoReferenceItem.parentTodoId;
@@ -132,11 +149,14 @@ ul {
 				//var c_refSeq = todoReferenceItem.refSeq;
 				//var c_todoId = todoReferenceItem.todoId;
 
-
-				bodyHtml += "<a href='#' data-toggle='tooltip' data-placement='top' title='"+c_whatTodo+"("+(c_status == ING ? "진행중": "완료됨")+")'>@"+c_parentTodoId+"</a>";
+				if(c_status == COMPLETED)
+					bodyHtml += "<a href='#' data-toggle='tooltip' data-placement='top' title='"+c_whatTodo+"("+(c_status == ING ? "진행중": "완료됨")+")'><strike>@"+c_parentTodoId+"</strike></a>";
+				else
+					bodyHtml += "<a href='#' data-toggle='tooltip' data-placement='top' title='"+c_whatTodo+"("+(c_status == ING ? "진행중": "완료됨")+")'>@"+c_parentTodoId+"</a>";
 
 				if(j < todoReferenceList.length-1) bodyHtml += ",&nbsp;";
 			}
+			if(todoReferenceList.length == 0) bodyHtml += "<p/>";
 			bodyHtml += "</td>";
 			bodyHtml += "<td>"+insertDate+"</td>";
 			bodyHtml += "<td>"+updateDate+"</td>";
@@ -156,7 +176,6 @@ ul {
 
 		// Set Table Body render
 		$('#tBody').html( bodyHtml );
-
 
 		// Table Row click event - (할일) 클릭시 이벤트 설정
 		$('.tdRow').click(function(){
@@ -184,7 +203,7 @@ ul {
 			$("#myModal").modal();
 		});
 
-
+		// 삭제 버튼 이벤트 listener
 		$('.delBtn').click(function(){
 			var _todoId 	 = $(this).attr('todoId');
 			removeTodo(_todoId);
@@ -210,19 +229,6 @@ ul {
 
 		if (confirm('삭제 하시겠습니까?')) {
 			$.ajax({
-
-
-			/*	url      : reqUrl,
-				type     : 'put',
-				data	 :	frm.serializeArray(),
-				dataType : 'json',
-				cache    : false,
-				success  : function( json, status, request ) {
-					var _json = JSON.stringify(json);
-					var jsonData = JSON.parse(_json);
-					var message = jsonData.message;
-				*/
-
 				url: reqUrl,
 				type: 'delete',
 				data: frm.serializeArray(),
@@ -302,7 +308,6 @@ ul {
 		});
 	}
 
-
 	//## Add TodoItem
 	function addTodo(){
 		var frm = $('#addForm');
@@ -310,12 +315,9 @@ ul {
 
 		var whatTodo = $('#addForm #whatTodo').val();
 		if(whatTodo == '' || whatTodo == null){
-
 			alert(whatTodo+"할일을 입력하세요.");
-
 			$('#addForm #whatTodo').focus();
 			return;
-
 		}
 		//alert("todoListUrl :"+todoListUrl);
 		$.ajax({
@@ -337,10 +339,6 @@ ul {
 
 			// move to first Page.
 			goPage(1);
-
-
-			// test src-
-			// alert(JSON.stringify(request));
 
 		 },
 		 error : function(request){
@@ -376,15 +374,14 @@ ul {
 					var jsonData = JSON.parse(_json);
 					var message = jsonData.message;
 
-
+					// Close modal popup
 					$('#myModal').modal('hide');
+
 					// msg alert
 					alert(message);
+
 					// move to first Page.
 					pageReload();
-
-					// test src-
-					// alert(JSON.stringify(request));
 				},
 				error    : function(request){
 					alertMsgByJson(request);
@@ -401,8 +398,6 @@ ul {
 		var rjson = json.responseText;
 
 		alert(rjson);
-		//var tt = JSON.parse(JSON.stringify(rjson));
-		//alert(tt.message);
 	}
 
 	function rederPagination() {
@@ -465,7 +460,8 @@ ul {
 			<input type="hidden" id="perPage" value="5" />
 			<input type="hidden" id="pageHorizonalSize" value="3" />
 		</form>
-		 		
+
+		<!-- TOP -->
 		<div class="jumbotron">
 			<h1>TODO</h1>      
 			<p>오늘 할일은 내일로 미루자.</p>
@@ -480,7 +476,7 @@ ul {
 				    	
 						<div class="modal-header">
 				        	<button type="button" class="close" data-dismiss="modal">&times;</button>
-							<h4 class="modal-title">Modification TodoItem</h4>
+							<h4 class="modal-title">Modify TodoItem</h4>
 						</div>
 						<div class="modal-body">
 							<input type="hidden" id="todoId" value="" name="todoId" />
@@ -533,12 +529,18 @@ ul {
 			</thead>
 			<tbody id='tBody'></tbody>
 		</table>
-		
 		<!-- Pagination -->
-		<ul class="pagination"><li></li></ul>
+		<div class="outer">
+			<div class="inner">
+				<div class="centered">
+					<ul class="pagination"><li>...</li></ul>
+				</div>
+			</div>
+		</div>
 	</div>
+	<!-- Footer -->
 	<div class="alert alert-success">
-	  <strong>Success!</strong> 정상적으로 처리 되었습니다.
+	  <strong>Todo App</strong> for kakaoix
 	</div>
 </body>
 </html>
