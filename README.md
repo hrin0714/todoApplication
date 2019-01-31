@@ -18,8 +18,8 @@
   * Clone 중 pom.xml 실행여부 시 진행(proceed)함
   * Clone 이 완료되면 pom.xml에 명시된 라이브러리가 다운로드가 진행됩니다.
   * Run > Run'Application' 
-    * Console에  Spring boot 실행 화면이 나오면 성공.
-    * 본인의 브라우져에서 http://localhost:8080 이동합니다.
+    - Console에  Spring boot 실행 화면이 나오면 성공.
+    - 본인의 브라우져에서 http://localhost:8080 이동합니다.
   
 
 
