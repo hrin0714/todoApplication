@@ -12,14 +12,6 @@
 --    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 --    See the License for the specific language governing permissions and
 --    limitations under the License.
---test code start--
-drop table if exists user;
-create table user (idno int primary key auto_increment, name varchar);
-
-insert into user (idno, name) values (1,'김인');
-insert into user (idno, name) values (2,'김효');
-insert into user (idno, name) values (3,'김동');
---test code end--
 
 -- TODO리스트
 drop table if exists k_todo_list;

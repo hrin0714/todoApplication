@@ -332,8 +332,12 @@ ul {
 			// msg alert
 			alert(message);
 
+			// reset input
+			$('#addForm #whatTodo').val('');
+
 			// move to first Page.
 			goPage(1);
+
 
 			// test src-
 			// alert(JSON.stringify(request));
